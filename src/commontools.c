@@ -4,11 +4,16 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include "libbtc-config.h"
+#endif
 #include <btc/base58.h>
 #include <btc/bip32.h>
 #include <btc/ecc.h>
 #include <btc/ecc_key.h>
-#include <btc/net.h>
+#if WITH_NET == 1
+#  include <btc/net.h>
+#endif
 #include <btc/random.h>
 #include <btc/serialize.h>
 #include <btc/tx.h>
@@ -23,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <malloc.h>
 
 btc_bool address_from_pubkey(const btc_chainparams* chain, const char* pubkey_hex, char* address)
 {
@@ -49,11 +53,14 @@ btc_bool address_from_pubkey(const btc_chainparams* chain, const char* pubkey_he
 
 btc_bool pubkey_from_privatekey(const btc_chainparams* chain, const char* privkey_wif, char* pubkey_hex, size_t* sizeout)
 {
-    uint8_t *privkey_data = (uint8_t *)alloca(sizeof(uint8_t) * strlen(privkey_wif));
+    const size_t privkey_len = sizeof(uint8_t) * strlen(privkey_wif);
+    uint8_t *privkey_data = (uint8_t *)btc_malloc(privkey_len);
     size_t outlen = 0;
-    outlen = btc_base58_decode_check(privkey_wif, privkey_data, sizeof(privkey_data));
-    if (privkey_data[0] != chain->b58prefix_secret_address)
+    outlen = btc_base58_decode_check(privkey_wif, privkey_data, privkey_len);
+    if (privkey_data[0] != chain->b58prefix_secret_address) {
+        btc_free(privkey_data);
         return false;
+    }
 
     btc_key key;
     btc_privkey_init(&key);
@@ -68,6 +75,7 @@ btc_bool pubkey_from_privatekey(const btc_chainparams* chain, const char* privke
     btc_pubkey_get_hex(&pubkey, pubkey_hex, sizeout);
     btc_pubkey_cleanse(&pubkey);
 
+    btc_free(privkey_data);
     return true;
 }
 
@@ -110,17 +118,17 @@ btc_bool hd_print_node(const btc_chainparams* chain, const char* nodeser)
         return false;
 
     size_t strsize = 128;
-    char *str = (char *)alloca(strsize);
+    char str[128];
     btc_hdnode_get_p2pkh_address(&node, chain, str, strsize);
 
     printf("ext key: %s\n", nodeser);
 
     size_t privkey_wif_size_bin = 34;
-    uint8_t *pkeybase58c = (uint8_t *)alloca(sizeof(uint8_t) * privkey_wif_size_bin);
+    uint8_t pkeybase58c[34];
     pkeybase58c[0] = chain->b58prefix_secret_address;
     pkeybase58c[33] = 1; /* always use compressed keys */
     size_t privkey_wif_size = 128;
-    char *privkey_wif = (char *)alloca(privkey_wif_size);
+    char privkey_wif[128];
     memcpy(&pkeybase58c[1], node.private_key, BTC_ECKEY_PKEY_LENGTH);
     assert(btc_base58_encode_check(pkeybase58c, privkey_wif_size_bin, privkey_wif, privkey_wif_size) != 0);
     printf("privatekey WIF: %s\n", privkey_wif);
