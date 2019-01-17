@@ -35,13 +35,15 @@
 
 typedef uint8_t btc_bool; //!serialize, c/c++ save bool
 
-#ifndef true
-#define true 1
-#endif
+#ifndef __cplusplus
+# ifndef true
+#  define true 1
+# endif
 
-#ifndef false
-#define false 0
-#endif
+# ifndef false
+#  define false 0
+# endif
+#endif //__cplusplus
 
 #ifdef __cplusplus
 # define LIBBTC_BEGIN_DECL extern "C" {
