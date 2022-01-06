@@ -1,4 +1,5 @@
 ACLOCAL_AMFLAGS = -I build-aux/m4
+AUTOMAKE_OPTIONS = serial-tests
 .PHONY: gen
 .INTERMEDIATE: $(GENBIN)
 
@@ -10,11 +11,13 @@ $(LIBSECP256K1): $(wildcard src/secp256k1/src/*) $(wildcard src/secp256k1/includ
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 lib_LTLIBRARIES = libbtc.la
-include_HEADERS = \
+libbtcincludedir = $(includedir)/btc
+libbtcinclude_HEADERS = \
     include/btc/aes256_cbc.h \
     include/btc/base58.h \
     include/btc/bip32.h \
     include/btc/block.h \
+    include/btc/blockchain.h \
     include/btc/btc.h \
     include/btc/buffer.h \
     include/btc/chainparams.h \
@@ -23,6 +26,8 @@ include_HEADERS = \
     include/btc/ecc_key.h \
     include/btc/ecc.h \
     include/btc/hash.h \
+    include/btc/hmac.h \
+    include/btc/memory.h \
     include/btc/portable_endian.h \
     include/btc/random.h \
     include/btc/ripemd160.h \
@@ -34,6 +39,23 @@ include_HEADERS = \
     include/btc/tx.h \
     include/btc/utils.h \
     include/btc/vector.h
+
+trezorcryptoincludedir = $(includedir)/trezor-crypto
+trezorcryptoinclude_HEADERS = \
+    src/trezor-crypto/base58.h \
+    src/trezor-crypto/blake2_common.h \
+    src/trezor-crypto/blake2b.h \
+    src/trezor-crypto/blake256.h \
+    src/trezor-crypto/groestl.h \
+    src/trezor-crypto/groestl_internal.h \
+    src/trezor-crypto/hasher.h \
+    src/trezor-crypto/hmac.h \
+    src/trezor-crypto/memzero.h \
+    src/trezor-crypto/options.h \
+    src/trezor-crypto/ripemd160.h \
+    src/trezor-crypto/segwit_addr.h \
+    src/trezor-crypto/sha2.h \
+    src/trezor-crypto/sha3.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libbtc.pc
@@ -51,16 +73,26 @@ libbtc_la_SOURCES = \
     src/ecc_key.c \
     src/ecc_libsecp256k1.c \
     src/memory.c \
-    src/memory.h \
     src/random.c \
     src/ripemd160.c \
     src/script.c \
-    src/segwit_addr.c \
     src/serialize.c \
-    src/sha2.c \
     src/tx.c \
     src/utils.c \
     src/vector.c
+
+libbtc_la_SOURCES += \
+    src/trezor-crypto/base58.c \
+    src/trezor-crypto/blake2b.c \
+    src/trezor-crypto/blake256.c \
+    src/trezor-crypto/groestl.c \
+    src/trezor-crypto/hasher.c \
+    src/trezor-crypto/hmac.c \
+    src/trezor-crypto/memzero.c \
+    src/trezor-crypto/ripemd160.c \
+    src/trezor-crypto/segwit_addr.c \
+    src/trezor-crypto/sha2.c \
+    src/trezor-crypto/sha3.c
 
 libbtc_la_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/logdb/include
 libbtc_la_LIBADD = $(LIBSECP256K1)
@@ -94,8 +126,7 @@ tests_LDFLAGS = -static
 TESTS = tests
 endif
 
-if WITH_WALLET
-
+if WITH_LOGDB
 libbtc_la_SOURCES += \
     src/logdb/logdb_core.c \
     src/logdb/logdb_memdb_llist.c \
@@ -103,7 +134,8 @@ libbtc_la_SOURCES += \
     src/logdb/logdb_rec.c \
     src/logdb/red_black_tree.c
 
-include_HEADERS += \
+logdbincludedir = $(includedir)/logdb
+logdbinclude_HEADERS = \
     src/logdb/include/logdb/logdb_base.h \
     src/logdb/include/logdb/logdb_core.h \
     src/logdb/include/logdb/logdb_memdb_llist.h \
@@ -112,7 +144,16 @@ include_HEADERS += \
     src/logdb/include/logdb/logdb.h \
     src/logdb/include/logdb/red_black_tree.h
 
-include_HEADERS += \
+if USE_TESTS
+tests_SOURCES += \
+    src/logdb/test/logdb_tests.c \
+    src/logdb/test/tests_red_black_tree.c \
+    src/logdb/test/logdb_tests_sample.h
+endif
+endif
+
+if WITH_WALLET
+libbtcinclude_HEADERS += \
     include/btc/wallet.h
 
 libbtc_la_SOURCES += \
@@ -120,14 +161,12 @@ libbtc_la_SOURCES += \
 
 if USE_TESTS
 tests_SOURCES += \
-    test/wallet_tests.c \
-    src/logdb/test/logdb_tests.c \
-    src/logdb/test/tests_red_black_tree.c
+    test/wallet_tests.c
 endif
 endif
 
 if WITH_NET
-include_HEADERS += \
+libbtcinclude_HEADERS += \
     include/btc/headersdb.h \
     include/btc/headersdb_file.h \
     include/btc/protocol.h \
@@ -149,7 +188,6 @@ tests_SOURCES += \
     test/netspv_tests.c \
     test/protocol_tests.c
 tests_LDADD += $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
-tests_LDFLAGS += -levent
 endif
 endif
 

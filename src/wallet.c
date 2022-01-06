@@ -349,14 +349,13 @@ btc_bool btc_wallet_load(btc_wallet* wallet, const char* file_path, int *error, 
             if (rectype == WALLET_DB_REC_TYPE_MASTERKEY) {
                 uint32_t len;
                 char strbuf[196];
+                memset(strbuf, 0, 196);
                 if (!deser_varlen_from_file(&len, wallet->dbfile)) return false;
                 if (len > sizeof(strbuf)) { return false; }
                 if (fread(strbuf, len, 1, wallet->dbfile ) != 1) return false;
-                size_t test = strlen(strbuf);
                 wallet->masterkey = btc_hdnode_new();
                 printf("xpriv: %s\n", strbuf);
                 btc_hdnode_deserialize(strbuf, wallet->chain, wallet->masterkey );
-                int i = 0;
             }
 
             if (rectype == WALLET_DB_REC_TYPE_PUBKEYCACHE) {
@@ -509,6 +508,7 @@ btc_wallet_hdnode* btc_wallet_find_hdnode_byaddr(btc_wallet* wallet, const char*
     }
     btc_free(whdnode_search);
 
+    btc_free(hashdata);
     return needle;
 }
 
@@ -749,7 +749,6 @@ void btc_wallet_check_transaction(void *ctx, btc_tx *tx, unsigned int pos, btc_b
     (void)(pindex);
     btc_wallet *wallet = (btc_wallet *)ctx;
     if (btc_wallet_is_mine(wallet, tx) || btc_wallet_is_from_me(wallet, tx)) {
-        int i = 0;
         printf("\nFound relevant transaction!\n");
     }
 }

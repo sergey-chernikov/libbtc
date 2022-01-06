@@ -80,8 +80,9 @@ btc_bool btc_privkey_gen(btc_key* privkey)
 btc_bool btc_privkey_verify_pubkey(btc_key* privkey, btc_pubkey* pubkey)
 {
     uint256 rnddata, hash;
-    const btc_bool rc = btc_random_bytes(rnddata, BTC_HASH_LENGTH, 0);
-    assert(rc);
+    const btc_bool res = btc_random_bytes(rnddata, BTC_HASH_LENGTH, 0);
+    if (!res)
+        return false;
     btc_hash(rnddata, BTC_HASH_LENGTH, hash);
 
     unsigned char sig[74];
@@ -124,7 +125,7 @@ btc_bool btc_privkey_decode_wif(const char *privkey_wif, const btc_chainparams* 
         return false;
     }
     memcpy(privkey->privkey, &privkey_data[1], BTC_ECKEY_PKEY_LENGTH);
-    btc_mem_zero(&privkey_data, sizeof(privkey_data));
+    btc_mem_zero(privkey_data, sizeof(privkey_data));
     btc_free(privkey_data);
     return true;
 }

@@ -899,7 +899,7 @@ void test_tx_sighash_ext()
         btc_tx* tx_sighash = btc_tx_new();
         btc_tx_deserialize(tx_data_sighash, outlen_sighash, tx_sighash, NULL, true);
 
-        uint8_t script_data[strlen(txvalid_sighash[i].script)];
+        uint8_t* script_data = malloc(strlen(txvalid_sighash[i].script));
         utils_hex_to_bin(txvalid_sighash[i].script, script_data, strlen(txvalid_sighash[i].script), &outlen_sighash);
         cstring *str = cstr_new_buf(script_data, outlen_sighash);
         uint256 hash;
@@ -911,7 +911,7 @@ void test_tx_sighash_ext()
         char sighash_hex[65];
         utils_bin_to_hex(hash, sizeof(hash), sighash_hex);
         utils_reverse_hex(sighash_hex, strlen(sighash_hex));
-
+        free(script_data);
         assert(memcmp(txvalid_sighash[i].sighash, sighash_hex, 64) == 0);
     }
 }
@@ -932,7 +932,7 @@ void test_tx_sighash()
         btc_tx* tx = btc_tx_new();
         btc_tx_deserialize(tx_data, outlen, tx, NULL, true);
 
-        uint8_t script_data[strlen(test->script) / 2];
+        uint8_t* script_data = malloc(strlen(test->script) / 2);
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
         uint256 sighash;
@@ -954,7 +954,7 @@ void test_tx_sighash()
         utils_reverse_hex(hexbuf, sizeof(hexbuf));
 
         assert(strcmp(hexbuf, test->hashhex) == 0);
-
+        free(script_data);
         btc_tx_free(tx);
     }
 }
@@ -1034,7 +1034,7 @@ void test_script_parse()
 
         btc_pubkey* pubkey = btc_malloc(sizeof(btc_pubkey));
         btc_pubkey_init(pubkey);
-        btc_pubkey_from_key(&key, pubkey);
+        btc_pubkey_from_key(&key, pubkey, false);
         assert(btc_pubkey_is_valid(pubkey) == 1);
 
         vector_add(pubkeys, pubkey);
@@ -1070,7 +1070,7 @@ void test_script_parse()
     cstring* txser = cstr_new_sz(1024);
     btc_tx_serialize(txser, tx, false);
 
-    char hexbuf[txser->len * 2 + 1];
+    char hexbuf[1024 * 2 + 1];
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf);
 
     u_assert_str_eq(hexbuf, "01000000000100ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac00000000");
@@ -1090,7 +1090,7 @@ void test_script_parse()
 
     txser = cstr_new_sz(1024);
     btc_tx_serialize(txser, tx, false);
-    char hexbuf2[txser->len * 2 + 1];
+    char hexbuf2[1024 * 2 + 1];
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf2);
     u_assert_str_eq(hexbuf2, "01000000000200ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088ac00000000");
 
@@ -1106,7 +1106,7 @@ void test_script_parse()
     btc_tx_add_address_out(tx, &btc_chainparams_regtest, 876543210, "2NFoJeWNrABZQ3YCWdbX9wGEnRge7kDeGzQ");
     txser = cstr_new_sz(1024);
     btc_tx_serialize(txser, tx, false);
-    char hexbuf3[txser->len * 2 + 1];
+    char hexbuf3[1024 * 2 + 1];
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf3);
     u_assert_str_eq(hexbuf3, "01000000000300ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088aceafc3e340000000017a914f763f798ede75a6ebf4e061b9e68ddb6df0442928700000000");
 
@@ -1115,7 +1115,7 @@ void test_script_parse()
     btc_tx_add_address_out(tx, &btc_chainparams_regtest, 100000000, "bcrt1qfupfj4yx83dz8vhcpcahhxyg4sfqr8pvx8l6l2");
     txser = cstr_new_sz(1024);
     btc_tx_serialize(txser, tx, false);
-    char hexbuf4[txser->len * 2 + 1];
+    char hexbuf4[1024 * 2 + 1];
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf4);
     u_assert_str_eq(hexbuf4, "01000000000400ca9a3b000000001976a91457b78cc8347175aee968eaa91846e840ef36ff9288ac4e61bc00000000001976a914dcba7ad8b58f35ea9a7ffa2102dcfb2612b6ba9088aceafc3e340000000017a914f763f798ede75a6ebf4e061b9e68ddb6df0442928700e1f505000000001600144f029954863c5a23b2f80e3b7b9888ac12019c2c00000000");
     cstr_free(txser, true);
@@ -1124,8 +1124,8 @@ void test_script_parse()
     btc_tx_free(tx);
 
     // op_return test
-    size_t masterkeysize = 200;
-    char masterkey[masterkeysize];
+    const size_t masterkeysize = 200;
+    char masterkey[200];
     u_assert_int_eq(hd_gen_master(&btc_chainparams_main, masterkey, masterkeysize), true);
 
     btc_hdnode node;
@@ -1150,7 +1150,7 @@ void test_script_parse()
 
     btc_pubkey pubkeytx_rev;
     btc_pubkey_init(&pubkeytx_rev);
-    btc_pubkey_from_key(&key, &pubkeytx_rev);
+    btc_pubkey_from_key(&key, &pubkeytx_rev, false);
 
     tx = btc_tx_new();
     btc_tx_add_data_out(tx, 100000, sigcmp, outlencmp); //0.001 BTC
@@ -1158,7 +1158,7 @@ void test_script_parse()
 
     txser = cstr_new_sz(1024);
     btc_tx_serialize(txser, tx, false);
-    char hexbuf5[txser->len * 2 + 1];
+    char hexbuf5[1024 * 2 + 1];
     utils_bin_to_hex((unsigned char*)txser->str, txser->len, hexbuf5);
     // TODO: test
     cstr_free(txser, true);
@@ -1179,22 +1179,23 @@ void test_script_op_codeseperator()
     cstring* new_script = cstr_new_sz(script->len);
     btc_script_copy_without_op_codeseperator(script, new_script);
 
-    char hexbuf[new_script->len * 2 + 1];
+    char* hexbuf = malloc(new_script->len * 2 + 1);
     utils_bin_to_hex((unsigned char*)new_script->str, new_script->len, hexbuf);
     assert(strcmp(hexbuf, scripthexGoal) == 0);
     cstr_free(new_script, true);
     cstr_free(script, true);
+    free(hexbuf);
 }
 
 void test_invalid_tx_deser()
 {
     char txstr[] =   "asadasdadad";
-    uint8_t tx_data[sizeof(txstr) / 2+1];
+    uint8_t tx_data_txstr[sizeof(txstr) / 2+1];
     int outlen;
-    utils_hex_to_bin(txstr, tx_data, strlen(txstr), &outlen);
+    utils_hex_to_bin(txstr, tx_data_txstr, strlen(txstr), &outlen);
 
     btc_tx* tx = btc_tx_new();
-    u_assert_int_eq(btc_tx_deserialize(tx_data, outlen, tx, NULL, true), false);
+    u_assert_int_eq(btc_tx_deserialize(tx_data_txstr, outlen, tx, NULL, true), false);
     btc_tx_free(tx);
 
     char failed_output[] =   "02000000000101bb3ee7f13f00b58a65f3789ff9917ae2eb2f360957ca86d4ec8068deae16f94c0000000017160014d7d7d2e56512a14b41f2b412eb33f9a2c464e407ffffffff01c0878b3b0000000017a914b1";
@@ -1202,7 +1203,7 @@ void test_invalid_tx_deser()
     utils_hex_to_bin(failed_output, tx_data_fo, strlen(failed_output), &outlen);
 
     btc_tx* tx_o = btc_tx_new();
-    u_assert_int_eq(btc_tx_deserialize(tx_data, outlen, tx_o, NULL, true), false);
+    u_assert_int_eq(btc_tx_deserialize(tx_data_fo, outlen, tx_o, NULL, true), false);
     btc_tx_free(tx_o);
 
 }
@@ -1219,16 +1220,16 @@ void test_tx_sign_p2sh_p2wpkh() {
     int inputindex = 0;
 
     int outlen;
-    uint8_t tx_data[strlen(tx_hex) / 2];
+    uint8_t* tx_data = malloc(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
-    uint8_t script_data[strlen(script_hex) / 2];
+    uint8_t* script_data = malloc(strlen(script_hex) / 2);
     utils_hex_to_bin(script_hex, script_data, strlen(script_hex), &outlen);
     cstring *script = cstr_new_buf(script_data, outlen);
-    uint8_t expected_sigder_data[strlen(expected_sigder) / 2];
+    uint8_t* expected_sigder_data = malloc(strlen(expected_sigder) / 2);
     utils_hex_to_bin(expected_sigder, expected_sigder_data, strlen(expected_sigder), &outlen);
-    uint8_t expected_sigcomp_data[strlen(expected_sigcomp) / 2];
+    uint8_t* expected_sigcomp_data = malloc(strlen(expected_sigcomp) / 2);
     utils_hex_to_bin(expected_sigcomp, expected_sigcomp_data, strlen(expected_sigcomp), &outlen);
-    uint8_t expected_tx_signed_data[strlen(expected_tx_signed) / 2];
+    uint8_t* expected_tx_signed_data = malloc(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
 
     btc_key pkey;
@@ -1249,7 +1250,7 @@ void test_tx_sign_p2sh_p2wpkh() {
     cstring* tx_ser = cstr_new_sz(1024);
     btc_tx_serialize(tx_ser, tx, true);
 
-    char hexbuf[tx_ser->len*2+1];
+    char hexbuf[1024*2+1];
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
 
@@ -1270,14 +1271,14 @@ void test_tx_sign_p2pkh(btc_tx *tx) {
     int inputindex = 0;
 
     int outlen;
-    uint8_t tx_data[strlen(tx_hex) / 2];
+    uint8_t* tx_data = malloc(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
-    uint8_t script_data[strlen(script_hex) / 2];
+    uint8_t* script_data = malloc(strlen(script_hex) / 2);
     utils_hex_to_bin(script_hex, script_data, strlen(script_hex), &outlen);
     cstring *script = cstr_new_buf(script_data, outlen);
-    uint8_t expected_sigder_data[strlen(expected_sigder) / 2];
+    uint8_t* expected_sigder_data = malloc(strlen(expected_sigder) / 2);
     utils_hex_to_bin(expected_sigder, expected_sigder_data, strlen(expected_sigder), &outlen);
-    uint8_t expected_tx_signed_data[strlen(expected_tx_signed) / 2];
+    uint8_t* expected_tx_signed_data = malloc(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
 
     btc_key pkey;
@@ -1296,7 +1297,7 @@ void test_tx_sign_p2pkh(btc_tx *tx) {
     cstring* tx_ser = cstr_new_sz(1024);
     btc_tx_serialize(tx_ser, tx, true);
 
-    char hexbuf[tx_ser->len*2+1];
+    char hexbuf[1024*2+1];
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
 
@@ -1315,17 +1316,17 @@ void test_tx_sign_p2pkh_i2(btc_tx *tx) {
     int inputindex = 1;
 
     int outlen;
-    uint8_t tx_data[strlen(tx_hex) / 2];
+    uint8_t* tx_data = malloc(strlen(tx_hex) / 2);
     utils_hex_to_bin(tx_hex, tx_data, strlen(tx_hex), &outlen);
-    uint8_t script_data[strlen(script_hex_correct) / 2];
+    uint8_t* script_data = malloc(strlen(script_hex_correct) / 2);
     utils_hex_to_bin(script_hex_correct, script_data, strlen(script_hex_correct), &outlen);
     cstring *script = cstr_new_buf(script_data, outlen);
-    uint8_t script_data_wrong[strlen(script_hex_wrong) / 2];
+    uint8_t* script_data_wrong = malloc(strlen(script_hex_wrong) / 2);
     utils_hex_to_bin(script_hex_wrong, script_data_wrong, strlen(script_hex_wrong), &outlen);
     cstring *script_wrong = cstr_new_buf(script_data_wrong, outlen);
-    uint8_t expected_sigder_data[strlen(expected_sigder) / 2];
+    uint8_t* expected_sigder_data = malloc(strlen(expected_sigder) / 2);
     utils_hex_to_bin(expected_sigder, expected_sigder_data, strlen(expected_sigder), &outlen);
-    uint8_t expected_tx_signed_data[strlen(expected_tx_signed) / 2];
+    uint8_t* expected_tx_signed_data = malloc(strlen(expected_tx_signed) / 2);
     utils_hex_to_bin(expected_tx_signed, expected_tx_signed_data, strlen(expected_tx_signed), &outlen);
 
     btc_key pkey;
@@ -1347,7 +1348,7 @@ void test_tx_sign_p2pkh_i2(btc_tx *tx) {
     cstring* tx_ser = cstr_new_sz(1024);
     btc_tx_serialize(tx_ser, tx, true);
 
-    char hexbuf[tx_ser->len*2+1];
+    char hexbuf[1024*2+1];
     utils_bin_to_hex((unsigned char*)tx_ser->str, tx_ser->len, hexbuf);
     u_assert_str_eq(hexbuf, expected_tx_signed);
 
