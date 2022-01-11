@@ -184,8 +184,9 @@ btc_bool btc_pubkey_get_hex(const btc_pubkey* pubkey, char* str, size_t* strsize
 }
 
 
-void btc_pubkey_from_key(const btc_key* privkey, btc_pubkey* pubkey_inout, btc_bool compressed)
+void btc_pubkey_from_key(const btc_key* privkey, btc_pubkey* pubkey_inout)
 {
+    const btc_bool compressed = true;
     if (pubkey_inout == NULL || privkey == NULL)
         return;
 
