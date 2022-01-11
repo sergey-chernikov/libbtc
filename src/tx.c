@@ -796,7 +796,7 @@ enum btc_tx_sign_result btc_tx_sign_input(btc_tx *tx_in_out, const cstring *scri
     // calculate pubkey
     btc_pubkey pubkey;
     btc_pubkey_init(&pubkey);
-    btc_pubkey_from_key(privkey, &pubkey, true);
+    btc_pubkey_from_key(privkey, &pubkey);
     if (!btc_pubkey_is_valid(&pubkey)) {
         return BTC_SIGN_INVALID_KEY;
     }

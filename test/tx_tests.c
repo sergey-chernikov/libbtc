@@ -1034,7 +1034,7 @@ void test_script_parse()
 
         btc_pubkey* pubkey = btc_malloc(sizeof(btc_pubkey));
         btc_pubkey_init(pubkey);
-        btc_pubkey_from_key(&key, pubkey, false);
+        btc_pubkey_from_key(&key, pubkey);
         assert(btc_pubkey_is_valid(pubkey) == 1);
 
         vector_add(pubkeys, pubkey);
@@ -1150,7 +1150,7 @@ void test_script_parse()
 
     btc_pubkey pubkeytx_rev;
     btc_pubkey_init(&pubkeytx_rev);
-    btc_pubkey_from_key(&key, &pubkeytx_rev, false);
+    btc_pubkey_from_key(&key, &pubkeytx_rev);
 
     tx = btc_tx_new();
     btc_tx_add_data_out(tx, 100000, sigcmp, outlencmp); //0.001 BTC

@@ -46,7 +46,7 @@ void test_eckey()
     btc_pubkey pubkey;
     btc_pubkey_init(&pubkey);
     assert(btc_pubkey_is_valid(&pubkey) == 0);
-    btc_pubkey_from_key(&key, &pubkey, false);
+    btc_pubkey_from_key(&key, &pubkey);
     assert(btc_pubkey_is_valid(&pubkey) == 1);
 
     assert(btc_privkey_verify_pubkey(&key, &pubkey) == 1);

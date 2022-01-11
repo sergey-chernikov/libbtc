@@ -66,7 +66,7 @@ btc_bool pubkey_from_privatekey(const btc_chainparams* chain, const char* privke
     btc_pubkey pubkey;
     btc_pubkey_init(&pubkey);
     assert(btc_pubkey_is_valid(&pubkey) == 0);
-    btc_pubkey_from_key(&key, &pubkey, true);
+    btc_pubkey_from_key(&key, &pubkey);
     btc_privkey_cleanse(&key);
 
     btc_pubkey_get_hex(&pubkey, pubkey_hex, sizeout);
