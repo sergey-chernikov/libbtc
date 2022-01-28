@@ -932,7 +932,7 @@ void test_tx_sighash()
         btc_tx* tx = btc_tx_new();
         btc_tx_deserialize(tx_data, outlen, tx, NULL, true);
 
-        uint8_t* script_data = malloc(strlen(test->script) / 2);
+        uint8_t script_data[512];
         utils_hex_to_bin(test->script, script_data, strlen(test->script), &outlen);
         cstring* script = cstr_new_buf(script_data, outlen);
         uint256 sighash;
@@ -949,12 +949,11 @@ void test_tx_sighash()
 
         cstr_free(script, true);
 
-        char hexbuf[sizeof(sighash)*2];
+        char hexbuf[sizeof(sighash)*2 + 1];
         utils_bin_to_hex(sighash, sizeof(sighash), hexbuf);
-        utils_reverse_hex(hexbuf, sizeof(hexbuf));
+        utils_reverse_hex(hexbuf, strlen(hexbuf));
 
         assert(strcmp(hexbuf, test->hashhex) == 0);
-        free(script_data);
         btc_tx_free(tx);
     }
 }
@@ -1078,9 +1077,9 @@ void test_script_parse()
 
     uint256 txhash;
     btc_tx_hash(tx, txhash);
-    char txhashhex[sizeof(txhash)*2];
+    char txhashhex[sizeof(txhash)*2 + 1];
     utils_bin_to_hex((unsigned char*)txhash, sizeof(txhash), txhashhex);
-    utils_reverse_hex(txhashhex, sizeof(txhashhex));
+    utils_reverse_hex(txhashhex, strlen(txhashhex));
 
     u_assert_str_eq(txhashhex, "41a86af25423391b1d9d78df1143e3a237f20db27511d8b72e25f2dec7a81d80");
 
@@ -1135,7 +1134,7 @@ void test_script_parse()
     uint256 sig_hash;
     btc_hash(node.private_key, BTC_ECKEY_PKEY_LENGTH, rev_code);
 
-    uint8_t sigdata[38] = {0x42, 0x49, 0x50, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t sigdata[40] = {0x42, 0x49, 0x50, 0x00, 0x00, 0x00, 0x00 };
     btc_hash(rev_code, BTC_HASH_LENGTH, &sigdata[7]);
 
     btc_hash(sigdata, sizeof(sigdata), sig_hash);

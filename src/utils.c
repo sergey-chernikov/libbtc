@@ -175,7 +175,7 @@ void utils_reverse_hex(char* h, int len)
 {
     char* copy = btc_malloc(len);
     int i;
-    strncpy(copy, h, len);
+    memcpy(copy, h, len);
     for (i = 0; i < len; i += 2) {
         h[i] = copy[len - i - 2];
         h[i + 1] = copy[len - i - 1];
