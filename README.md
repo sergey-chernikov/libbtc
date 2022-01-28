@@ -14,7 +14,8 @@ Libbtc is a very portable C library for creating and manipulating bitcoin data s
 Current features
 ----------------
 * Generating and storing private and public keys
-* ECDSA secpk1 signing and verification (through [libsecp256k1](https://github.com/bitcoin-core/secp256k1) included as git subtree)
+* ECDSA secp256k1 signing and verification (through [libsecp256k1](https://github.com/bitcoin-core/secp256k1) included as git subtree)
+* Generate recoverable signatures (and recover pubkey from signatures)
 * BIP32 hierarchical deterministic key derivation
 * Transaction generation, manipulation, signing and ser-/deserialization including P2PKH, P2SH, multisig
 * Address generation
@@ -23,7 +24,6 @@ Current features
 * Native constant time AES (+256CBC) cipher implementation including NIST testvectors
 * Keystore (wallet) databases (through logdb https://github.com/liblogdb/liblogdb)
 * Event based bitcoin P2P client capable of connecting to multiple nodes in a single thread (requires [libevent](https://github.com/libevent/libevent))
-
 
 Advantages of libbtc?
 ----------------
@@ -99,6 +99,21 @@ The application will try to connect to max 6 peers, send the transaction two two
 
 How to Build
 ----------------
+
+#### Install dependencies
+
+##### Debian / Ubuntu
+```
+sudo apt-get install build-essential libevent-dev
+```
+
+##### OpenBSD
+```
+sudo pkg_add autoconf automake libtool libevent
+```
+
+##### Other
+Please submit a pull request to add dependencies for your system, or update these.
 
 #### Full library including CLI tool and wallet database
 ```

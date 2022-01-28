@@ -22,7 +22,7 @@ AC_PROG_CC_C99
 
 CFLAGS="$CFLAGS -W"
 
-warn_CFLAGS="-std=gnu99 -pedantic -Wno-unused-function -Wno-long-long -Wno-overlength-strings"
+warn_CFLAGS="-std=gnu99 -pedantic -Wno-unused-function -Wno-long-long -Wno-overlength-strings -Werror=return-type"
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $warn_CFLAGS"
 AC_MSG_CHECKING([if ${CC} supports ${warn_CFLAGS}])
@@ -117,7 +117,7 @@ fi
 
 if test x$with_net = "xyes"; then
   AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
-  AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
+  AC_CHECK_LIB([event_core],[main],EVENT_LIBS=-levent_core,AC_MSG_ERROR(libevent_core missing))
   if test "$host" = "mingw"; then
     AC_CHECK_LIB([event_pthreads],[main],EVENT_PTHREADS_LIBS=-levent_pthreads,AC_MSG_ERROR(libevent_pthreads missing))
   fi
@@ -132,7 +132,9 @@ AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([WITH_TOOLS], [test "x$with_tools" = "xyes"])
 AM_CONDITIONAL([WITH_WALLET], [test "x$with_wallet" = "xyes"])
 AM_CONDITIONAL([WITH_NET], [test "x$with_net" = "xyes"])
+AM_CONDITIONAL([WITH_LOGDB], [test "x$with_tools" = "xyes" -o "x$with_wallet" = "xyes"])
 
+ac_configure_args="${ac_configure_args} --enable-module-recovery"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
 dnl make sure nothing new is exported so that we don't break the cache

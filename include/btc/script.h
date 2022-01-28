@@ -27,16 +27,19 @@
 #ifndef __LIBBTC_SCRIPT_H__
 #define __LIBBTC_SCRIPT_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "btc.h"
-
 #include "cstr.h"
-
 #include "ecc_key.h"
 #include "vector.h"
+
+LIBBTC_BEGIN_DECL
+
+/** Sighash version types */
+enum btc_sig_version
+{
+    SIGVERSION_BASE = 0,
+    SIGVERSION_WITNESS_V0 = 1,
+};
 
 /** Signature hash types/flags */
 enum {
@@ -192,12 +195,15 @@ enum opcodetype {
 };
 
 enum btc_tx_out_type {
+    BTC_TX_INVALID = -1,
     BTC_TX_NONSTANDARD,
     // 'standard' transaction types:
     BTC_TX_PUBKEY,
     BTC_TX_PUBKEYHASH,
     BTC_TX_SCRIPTHASH,
     BTC_TX_MULTISIG,
+    BTC_TX_WITNESS_V0_PUBKEYHASH,
+    BTC_TX_WITNESS_V0_SCRIPTHASH,
 };
 
 typedef struct btc_script_op_ {
@@ -205,6 +211,9 @@ typedef struct btc_script_op_ {
     unsigned char* data; /* associated data, if any */
     size_t datalen;
 } btc_script_op;
+
+// Maximum script length in bytes
+static const int MAX_SCRIPT_SIZE = 10000;
 
 //copy a script without the codeseperator ops
 btc_bool btc_script_copy_without_op_codeseperator(const cstring* scriptin, cstring* scriptout);
@@ -216,7 +225,6 @@ btc_bool btc_script_get_ops(const cstring* script_in, vector* ops_out);
 
 LIBBTC_API enum btc_tx_out_type btc_script_classify_ops(const vector* ops);
 LIBBTC_API enum btc_tx_out_type btc_script_classify(const cstring* script, vector* data_out);
-LIBBTC_API btc_bool btc_script_extract_pkh(const cstring* script, uint8_t* data);
 
 LIBBTC_API enum opcodetype btc_encode_op_n(const int n);
 LIBBTC_API void btc_script_append_op(cstring* script_in, enum opcodetype op);
@@ -224,10 +232,14 @@ LIBBTC_API void btc_script_append_pushdata(cstring* script_in, const unsigned ch
 
 LIBBTC_API btc_bool btc_script_build_multisig(cstring* script_in, const unsigned int required_signatures, const vector* pubkeys_chars);
 LIBBTC_API btc_bool btc_script_build_p2pkh(cstring* script, const uint160 hash160);
+LIBBTC_API btc_bool btc_script_build_p2wpkh(cstring* script, const uint160 hash160);
 LIBBTC_API btc_bool btc_script_build_p2sh(cstring* script_in, const uint160 hash160);
+LIBBTC_API btc_bool btc_script_get_scripthash(const cstring* script_in, uint160 scripthash);
 
-#ifdef __cplusplus
-}
-#endif
+LIBBTC_API const char * btc_tx_out_type_to_str(const enum btc_tx_out_type type);
+
+LIBBTC_API btc_bool btc_script_is_witnessprogram(const cstring* script, uint8_t* version_out, uint8_t *program_out, int *programm_len_out);
+
+LIBBTC_END_DECL
 
 #endif // __LIBBTC_SCRIPT_H__

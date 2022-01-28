@@ -21,19 +21,15 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- 
+
 */
 
 #ifndef __LIBBTC_ECC_H__
 #define __LIBBTC_ECC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "btc.h"
 
-#include <stddef.h>
+LIBBTC_BEGIN_DECL
 
 //!init static ecc context
 LIBBTC_API void btc_ecc_start(void);
@@ -62,6 +58,12 @@ LIBBTC_API btc_bool btc_ecc_sign(const uint8_t* private_key, const uint256 hash,
 //!create a compact (64bytes) signature with private key
 LIBBTC_API btc_bool btc_ecc_sign_compact(const uint8_t* private_key, const uint256 hash, unsigned char* sigcomp, size_t* outlen);
 
+//!create a compact recoverable (65bytes) signature with private key
+LIBBTC_API btc_bool btc_ecc_sign_compact_recoverable(const uint8_t* private_key, const uint256 hash, unsigned char* sigcomprec, size_t* outlen, int* recid);
+
+//!recover a pubkey from a signature and recid
+LIBBTC_API btc_bool btc_ecc_recover_pubkey(const unsigned char* sigrec, const uint256 hash, const int recid, uint8_t* public_key, size_t *outlen);
+
 //!converts (and normalized) a compact signature to DER
 LIBBTC_API btc_bool btc_ecc_compact_to_der_normalized(unsigned char* sigcomp_in, unsigned char* sigder_out, size_t* sigder_len_out);
 
@@ -71,8 +73,6 @@ LIBBTC_API btc_bool btc_ecc_der_to_compact(unsigned char* sigder_in, size_t sigd
 //!verify DER signature with public key
 LIBBTC_API btc_bool btc_ecc_verify_sig(const uint8_t* public_key, btc_bool compressed, const uint256 hash, unsigned char* sigder, size_t siglen);
 
-#ifdef __cplusplus
-}
-#endif
+LIBBTC_END_DECL
 
-#endif //__LIBBTC_ECC_H__
+#endif // __LIBBTC_ECC_H__

@@ -22,19 +22,15 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- 
+
 */
 
 #ifndef __LIBBTC_CSTR_H__
 #define __LIBBTC_CSTR_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "btc.h"
 
-#include <stddef.h>
+LIBBTC_BEGIN_DECL
 
 typedef struct cstring {
     char* str;    /* string data, incl. NUL */
@@ -45,7 +41,7 @@ typedef struct cstring {
 LIBBTC_API cstring* cstr_new(const char* init_str);
 LIBBTC_API cstring* cstr_new_sz(size_t sz);
 LIBBTC_API cstring* cstr_new_buf(const void* buf, size_t sz);
-LIBBTC_API cstring* cstr_new_cstr(cstring* copy_str);
+LIBBTC_API cstring* cstr_new_cstr(const cstring* copy_str);
 LIBBTC_API void cstr_free(cstring* s, int free_buf);
 
 LIBBTC_API int cstr_equal(const cstring* a, const cstring* b);
@@ -59,8 +55,7 @@ LIBBTC_API int cstr_append_cstr(cstring* s, cstring* append);
 LIBBTC_API int cstr_append_c(cstring* s, char ch);
 
 LIBBTC_API int cstr_alloc_minsize(cstring* s, size_t sz);
-#ifdef __cplusplus
-}
-#endif
 
-#endif /* __LIBLOGDB_CSTR_H__ */
+LIBBTC_END_DECL
+
+#endif // __LIBBTC_CSTR_H__

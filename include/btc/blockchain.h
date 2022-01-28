@@ -27,26 +27,18 @@
 #ifndef __LIBBTC_BLOCKCHAIN_H__
 #define __LIBBTC_BLOCKCHAIN_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "block.h"
 #include "btc.h"
+#include "block.h"
 
-#include <stdint.h>
-#include <sys/types.h>
+LIBBTC_BEGIN_DECL
 
 typedef struct btc_blockindex {
     uint32_t height;
     uint256 hash;
     btc_block_header header;
-    struct btc_blockindex* next;
     struct btc_blockindex* prev;
 } btc_blockindex;
 
-#ifdef __cplusplus
-}
-#endif
+LIBBTC_END_DECL
 
-#endif //__LIBBTC_BLOCKCHAIN_H__
+#endif // __LIBBTC_BLOCKCHAIN_H__

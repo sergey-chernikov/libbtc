@@ -22,25 +22,18 @@
  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- 
+
  */
 
 #ifndef __LIBBTC_SERIALIZE_H__
 #define __LIBBTC_SERIALIZE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "btc.h"
-
 #include "buffer.h"
 #include "cstr.h"
-
 #include "portable_endian.h"
 
-#include <stdint.h>
-#include <stdio.h>
+LIBBTC_BEGIN_DECL
 
 LIBBTC_API void ser_bytes(cstring* s, const void* p, size_t len);
 LIBBTC_API void ser_u16(cstring* s, uint16_t v_);
@@ -64,14 +57,13 @@ LIBBTC_API int deser_u64(uint64_t* vo, struct const_buffer* buf);
 LIBBTC_API int deser_u256(uint256 vo, struct const_buffer* buf);
 
 LIBBTC_API int deser_varlen(uint32_t* lo, struct const_buffer* buf);
+LIBBTC_API int deser_varlen_from_file(uint32_t* lo, FILE* file);
 LIBBTC_API int deser_varlen_file(uint32_t* lo, FILE* file, uint8_t* rawdata, size_t* buflen_inout);
 LIBBTC_API int deser_str(char* so, struct const_buffer* buf, size_t maxlen);
 LIBBTC_API int deser_varstr(cstring** so, struct const_buffer* buf);
 
 LIBBTC_API int deser_s64(int64_t* vo, struct const_buffer* buf);
 
-#ifdef __cplusplus
-}
-#endif
+LIBBTC_END_DECL
 
-#endif /* __LIBBTC_SERIALIZE_H__ */
+#endif // __LIBBTC_SERIALIZE_H__

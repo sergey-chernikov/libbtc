@@ -27,18 +27,14 @@
 #ifndef __LIBBTC_NET_H__
 #define __LIBBTC_NET_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <event2/event.h>
-
 #include "btc.h"
 #include "buffer.h"
 #include "chainparams.h"
 #include "cstr.h"
 #include "protocol.h"
 #include "vector.h"
+
+LIBBTC_BEGIN_DECL
 
 static const unsigned int BTC_P2P_MESSAGE_CHUNK_SIZE = 4096;
 
@@ -48,8 +44,10 @@ enum NODE_STATE {
     NODE_ERRORED = (1 << 2),
     NODE_TIMEOUT = (1 << 3),
     NODE_HEADERSYNC = (1 << 4),
-    NODE_MISSBEHAVED = (1 << 5),
-    NODE_DISCONNECTED = (1 << 6),
+    NODE_BLOCKSYNC	= (1 << 5),
+    NODE_MISSBEHAVED = (1 << 6),
+    NODE_DISCONNECTED = (1 << 7),
+    NODE_DISCONNECTED_FROM_REMOTE_PEER = (1 << 8),
 };
 
 /* basic group-of-nodes structure */
@@ -89,6 +87,8 @@ typedef struct btc_node_ {
     int nodeid;
     uint64_t lastping;
     uint64_t time_started_con;
+    uint64_t time_last_request;
+    uint256 last_requested_inv;
 
     cstring* recvBuffer;
     uint64_t nonce;
@@ -96,6 +96,9 @@ typedef struct btc_node_ {
     uint32_t state;
     int missbehavescore;
     btc_bool version_handshake;
+
+    unsigned int bestknownheight;
+
     uint32_t hints; /* can be use for user defined state */
 } btc_node;
 
@@ -107,7 +110,7 @@ LIBBTC_API int net_write_log_printf(const char* format, ...);
 
 /* create new node object */
 LIBBTC_API btc_node* btc_node_new();
-LIBBTC_API void btc_node_free(btc_node* group);
+LIBBTC_API void btc_node_free(btc_node* node);
 
 /* set the nodes ip address and port (ipv4 or ipv6)*/
 LIBBTC_API btc_bool btc_node_set_ipport(btc_node* node, const char* ipport);
@@ -126,13 +129,16 @@ LIBBTC_API btc_bool btc_node_missbehave(btc_node* node);
 LIBBTC_API btc_node_group* btc_node_group_new(const btc_chainparams* chainparams);
 LIBBTC_API void btc_node_group_free(btc_node_group* group);
 
+/* disconnect all peers */
+LIBBTC_API void btc_node_group_shutdown(btc_node_group* group);
+
 /* add a node to a node group */
 LIBBTC_API void btc_node_group_add_node(btc_node_group* group, btc_node* node);
 
 /* start node groups event loop */
 LIBBTC_API void btc_node_group_event_loop(btc_node_group* group);
 
-/* connect to more nodex */
+/* connect to more nodes */
 LIBBTC_API btc_bool btc_node_group_connect_next_nodes(btc_node_group* group);
 
 /* get the amount of connected nodes */
@@ -144,17 +150,16 @@ LIBBTC_API void btc_node_send_version(btc_node* node);
 /* send arbitrary data to node */
 LIBBTC_API void btc_node_send(btc_node* node, cstring* data);
 
-int btc_node_parse_message(btc_node* node, btc_p2p_msg_hdr* hdr, struct const_buffer* buf);
-void btc_node_connection_state_changed(btc_node* node);
+LIBBTC_API int btc_node_parse_message(btc_node* node, btc_p2p_msg_hdr* hdr, struct const_buffer* buf);
+LIBBTC_API void btc_node_connection_state_changed(btc_node* node);
 
 /* =================================== */
 /* DNS */
 /* =================================== */
 
-int btc_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
+LIBBTC_API btc_bool btc_node_group_add_peers_by_ip_or_seed(btc_node_group *group, const char *ips);
+LIBBTC_API int btc_get_peers_from_dns(const char* seed, vector* ips_out, int port, int family);
 
-#ifdef __cplusplus
-}
-#endif
+LIBBTC_END_DECL
 
-#endif //__LIBBTC_NET_H__
+#endif // __LIBBTC_NET_H__

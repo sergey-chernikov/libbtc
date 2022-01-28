@@ -88,7 +88,7 @@ void* btc_calloc_internal(size_t count, size_t size)
     if ((result = calloc(count, size))) { /* assignment intentional */
         return (result);
     } else {
-        printf("memory overflow: calloc failed in btc_malloc.");
+        printf("memory overflow: calloc failed in btc_calloc.");
         printf("  Exiting Program.\n");
         exit(-1);
         return (0);
@@ -102,7 +102,7 @@ void* btc_realloc_internal(void *ptr, size_t size)
     if ((result = realloc(ptr, size))) { /* assignment intentional */
         return (result);
     } else {
-        printf("memory overflow: calloc failed in btc_malloc.");
+        printf("memory overflow: realloc failed in btc_realloc.");
         printf("  Exiting Program.\n");
         exit(-1);
         return (0);
@@ -113,3 +113,17 @@ void btc_free_internal(void* ptr)
 {
     free(ptr);
 }
+
+#ifdef HAVE_MEMSET_S
+volatile void *btc_mem_zero(volatile void *dst, size_t len)
+{
+    memset_s(dst, len, 0, len);
+}
+#else
+volatile void *btc_mem_zero(volatile void *dst, size_t len)
+{
+    volatile char *buf;
+    for (buf = (volatile char *)dst;  len;  buf[--len] = 0);
+    return dst;
+}
+#endif
