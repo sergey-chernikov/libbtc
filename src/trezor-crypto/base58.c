@@ -58,10 +58,13 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
 
   const unsigned char *b58u = (const unsigned char *)b58;
   unsigned char *binu = bin;
-  const size_t outisz = (binsz + sizeof(b58_almostmaxint_t) - 1);
+  const size_t outisz = (binsz + sizeof(b58_almostmaxint_t) - 1) / sizeof(b58_almostmaxint_t);
 
 #ifdef _MSC_VER
-  b58_almostmaxint_t outi[4096];
+  if (outisz > 1024) {  // avoid buffer overflow
+      return false;
+  }
+  b58_almostmaxint_t outi[1024];
 #else
   b58_almostmaxint_t outi[outisz];
 #endif
@@ -161,6 +164,9 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
 
   const size_t size = (binsz - zcount) * 138 / 100 + 1;
 #ifdef _MSC_VER
+  if (size > 4096) { // avoid buffer overflow
+      return false;
+  }
   uint8_t buf[4096];
 #else
   uint8_t buf[size];
