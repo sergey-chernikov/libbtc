@@ -160,7 +160,8 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
   while (zcount < binsz && !bin[zcount]) ++zcount;
 
   const size_t size = (binsz - zcount) * 138 / 100 + 1;
-  uint8_t *buf = (uint8_t*)btc_malloc(size);
+  /*uint8_t *buf = (uint8_t*)btc_malloc(size);*/
+  uint8_t buf[4096];
   memzero(buf, size);
 
   for (i = zcount, high = size - 1; i < binsz; ++i, high = j) {
@@ -180,7 +181,7 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
 
   if (*b58sz <= zcount + size - j) {
     *b58sz = zcount + size - j + 1;
-    free(buf);
+    /*free(buf);*/
     return false;
   }
 
@@ -189,7 +190,7 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
   b58[i] = '\0';
   *b58sz = i + 1;
 
-  free(buf);
+  /*free(buf);*/
   return true;
 }
 
