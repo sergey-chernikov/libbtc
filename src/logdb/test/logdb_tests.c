@@ -148,7 +148,7 @@ void test_logdb(logdb_log_db* (*new_func)())
     fsize = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    buf = malloc(fsize + 1);
+    buf = safe_malloc(fsize + 1);
     fread(buf, fsize, 1, f);
     fclose(f);
 
