@@ -48,8 +48,7 @@
 
 void memzero(void *const pnt, const size_t len) {
 #ifdef _WIN32
-  // SecureZeroMemory(pnt, len);
-  memset(pnt, 0, len);
+  SecureZeroMemory(pnt, len);
 #elif defined(HAVE_MEMSET_S)
   memset_s(pnt, (rsize_t)len, 0, (rsize_t)len);
 #elif defined(HAVE_EXPLICIT_BZERO)

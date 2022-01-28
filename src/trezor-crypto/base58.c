@@ -59,7 +59,12 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
   const unsigned char *b58u = (const unsigned char *)b58;
   unsigned char *binu = bin;
   const size_t outisz = (binsz + sizeof(b58_almostmaxint_t) - 1);
-  b58_almostmaxint_t *outi = (b58_almostmaxint_t *)btc_malloc(outisz);
+
+#ifdef _MSC_VER
+  b58_almostmaxint_t outi[4096];
+#else
+  b58_almostmaxint_t outi[outisz];
+#endif
   b58_maxint_t t = 0;
   b58_almostmaxint_t c = 0;
   size_t i = 0, j = 0;
@@ -70,7 +75,7 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
 
   size_t b58sz = strlen(b58);
 
-  memzero(outi, sizeof(outi));
+  memzero(outi, outisz);
 
   // Leading zeros, just count
   for (i = 0; i < b58sz && b58u[i] == '1'; ++i) ++zerocount;
@@ -81,7 +86,6 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
       return false;
     if (b58digits_map[b58u[i]] == -1) {
         // Invalid base58 digit
-        free(outi);
         return false;
     }
     c = (unsigned)b58digits_map[b58u[i]];
@@ -92,12 +96,10 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
     }
     if (c) {
         // Output number too big (carry to the next int32)
-        free(outi);
         return false;
     }
     if (outi[0] & zeromask) {
         // Output number too big (last int32 filled too far)
-        free(outi);
         return false;
     }
   }
@@ -115,8 +117,6 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
       *(binu++) = (outi[j] >> (8 * (i - 1))) & 0xff;
     }
   }
-
-  free(outi);
 
   // locate the most significant byte
   binu = bin;
@@ -160,8 +160,11 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
   while (zcount < binsz && !bin[zcount]) ++zcount;
 
   const size_t size = (binsz - zcount) * 138 / 100 + 1;
-  /*uint8_t *buf = (uint8_t*)btc_malloc(size);*/
+#ifdef _MSC_VER
   uint8_t buf[4096];
+#else
+  uint8_t buf[size];
+#endif
   memzero(buf, size);
 
   for (i = zcount, high = size - 1; i < binsz; ++i, high = j) {
@@ -181,7 +184,6 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
 
   if (*b58sz <= zcount + size - j) {
     *b58sz = zcount + size - j + 1;
-    /*free(buf);*/
     return false;
   }
 
@@ -190,7 +192,6 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
   b58[i] = '\0';
   *b58sz = i + 1;
 
-  /*free(buf);*/
   return true;
 }
 
@@ -199,15 +200,18 @@ int base58_encode_check(const uint8_t *data, int datalen,
   if (datalen > 128) {
     return 0;
   }
-  uint8_t *buf = (uint8_t *)btc_malloc(datalen + 32);
-  memset(buf, 0, sizeof(buf));
+#ifdef _MSC_VER
+  uint8_t buf[128 + 32];
+#else
+  uint8_t buf[datalen + 32];
+#endif
+  memset(buf, 0, datalen + 32);
   uint8_t *hash = buf + datalen;
   memcpy(buf, data, datalen);
   hasher_Raw(hasher_type, data, datalen, hash);
   size_t res = strsize;
   bool success = b58enc(str, &res, buf, datalen + 4);
-  memzero(buf, sizeof(buf));
-  free(buf);
+  memzero(buf, datalen + 32);
   return success ? res : 0;
 }
 
@@ -216,20 +220,21 @@ int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
   if (datalen > 128) {
     return 0;
   }
-  uint8_t *d = (uint8_t *)btc_malloc(datalen + 4);
-  memset(d, 0, sizeof(d));
+#ifdef _MSC_VER
+  uint8_t d[128 + 4];
+#else
+  uint8_t d[datalen + 4];
+#endif
+  memset(d, 0, datalen + 4);
   size_t res = datalen + 4;
   if (b58tobin(d, &res, str) != true) {
-    free(d);
     return 0;
   }
   uint8_t *nd = d + datalen + 4 - res;
   if (b58check(nd, res, hasher_type, str) < 0) {
-    free(d);
     return 0;
   }
   memcpy(data, nd, res - 4);
-  free(d);
   return res - 4;
 }
 
