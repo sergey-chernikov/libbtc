@@ -101,6 +101,7 @@ INSTALL(FILES
 
 INSTALL(FILES
     src/trezor-crypto/base58.h
+    src/trezor-crypto/bip39.h
     src/trezor-crypto/blake2_common.h
     src/trezor-crypto/blake2b.h
     src/trezor-crypto/blake256.h
@@ -110,6 +111,8 @@ INSTALL(FILES
     src/trezor-crypto/hmac.h
     src/trezor-crypto/memzero.h
     src/trezor-crypto/options.h
+    src/trezor-crypto/pbkdf2.h
+    src/trezor-crypto/rand.h
     src/trezor-crypto/ripemd160.h
     src/trezor-crypto/segwit_addr.h
     src/trezor-crypto/sha2.h
@@ -141,12 +144,16 @@ TARGET_SOURCES(${LIBBTC_NAME} PRIVATE
 
 TARGET_SOURCES(${LIBBTC_NAME} PRIVATE
     src/trezor-crypto/base58.c
+    src/trezor-crypto/bip39.c
+    src/trezor-crypto/bip39_english.h
     src/trezor-crypto/blake2b.c
     src/trezor-crypto/blake256.c
     src/trezor-crypto/groestl.c
     src/trezor-crypto/hasher.c
     src/trezor-crypto/hmac.c
     src/trezor-crypto/memzero.c
+    src/trezor-crypto/pbkdf2.c
+    src/trezor-crypto/rand.c
     src/trezor-crypto/ripemd160.c
     src/trezor-crypto/segwit_addr.c
     src/trezor-crypto/sha2.c
